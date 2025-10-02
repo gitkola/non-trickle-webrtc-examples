@@ -19,9 +19,8 @@ export const VideoComponent = ({
         'relative',
         'flex',
         'flex-1',
-        'shrink-0',
-        'h-1/2',
-        'w-1/2',
+        'min-w-0',
+        'min-h-0',
         'overflow-hidden',
         'bg-foreground/50',
         'border-2',
@@ -34,8 +33,6 @@ export const VideoComponent = ({
         muted
         playsInline
         className={cn(
-          'flex',
-          'flex-1',
           'h-full',
           'w-full',
           'bg-foreground/50',

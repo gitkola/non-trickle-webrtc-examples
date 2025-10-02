@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Copy, Clipboard, Check, ArrowUp, ArrowDown } from 'lucide-react';
-import { Button } from './components/ui/button';
-import { Input } from './components/ui/input';
-import { cn } from './lib/utils';
 import { VideoComponent } from './components/VideoComponent';
+import { AnswerPanel } from './components/AnswerPanel';
+import { OfferPanel } from './components/OfferPanel';
 
 const iceServers = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -15,6 +13,7 @@ export function App() {
   const [remoteSDP, setRemoteSDP] = useState('');
   const [connectionState, setConnectionState] = useState('disconnected');
   const [isOfferer, setIsOfferer] = useState<boolean | null>(null);
+  const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -29,6 +28,14 @@ export function App() {
     return () => {
       cleanup();
     };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const startLocalMedia = async () => {
@@ -124,108 +131,36 @@ export function App() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-black/50">
-      <div className="flex flex-col items-center justify-center">
-        <span
-          className={`flex items-center justify-center text-sm py-2 w-full self-center font-medium ${
-            connectionState === 'connected'
-              ? 'bg-green-600'
-              : connectionState === 'connecting'
-              ? 'bg-yellow-600'
-              : connectionState === 'failed'
-              ? 'bg-red-600'
-              : 'bg-slate-600'
-          }`}
-        >
-          {connectionState}
-        </span>
-      </div>
-
-      <div className="flex flex-col items-start justify-center">
-        <div className="flex items-center justify-start">
-          <Button
-            variant="default"
-            onClick={createOffer}
-            className={cn(
-              'shrink-0',
-              'h-12',
-              'border-0',
-              'rounded-none',
-              'bg-teal-500',
-              'hover:bg-teal-600',
-              'active:bg-teal-700'
-            )}
-          >
-            <ArrowUp className="size-6" />
-            <span className="font-semibold">Create Offer</span>
-          </Button>
-          <Input
-            value={localSDP}
-            readOnly
-            className={cn(
-              'h-12',
-              'w-full',
-              'px-2',
-              'font-mono',
-              'text-background',
-              'bg-foreground',
-              'rounded-none',
-              'border-none'
-            )}
-            placeholder="Your SDP will appear here..."
-          />
-          <Button
-            variant="default"
-            disabled={!localSDP}
-            onClick={() => copyToClipboard(localSDP)}
-            title="Copy to clipboard"
-            className="shrink-0 size-12 border-0 rounded-none bg-teal-500 hover:bg-teal-600 active:bg-teal-700"
-          >
-            {copied ? (
-              <Check className="size-6" />
-            ) : (
-              <Copy className="size-6" />
-            )}
-          </Button>
-        </div>
-        <div className="flex items-center justify-start">
-          <Button
-            variant="default"
-            onClick={createAnswer}
-            className="shrink-0 h-12 border-0 rounded-none bg-teal-500 hover:bg-teal-600 active:bg-teal-700"
-          >
-            <ArrowDown className="size-6" />
-            <span className="font-semibold">Create Answer</span>
-          </Button>
-          <Input
-            value={remoteSDP}
-            onChange={(e) => handleSetRemoteSDP(e.target.value)}
-            className={cn(
-              'h-12',
-              'w-full',
-              'px-2',
-              'font-mono',
-              'text-background',
-              'bg-foreground',
-              'rounded-none',
-              'border-none'
-            )}
-            placeholder="Paste remote SDP here..."
-          />
-          <Button
-            variant="default"
-            onClick={handleApplyRemoteSDP}
-            title="Apply remote SDP"
-            className="shrink-0 size-12 border-0 rounded-none bg-teal-500 hover:bg-teal-600 active:bg-teal-700"
-          >
-            <Clipboard className="size-6" />
-          </Button>
-        </div>
-      </div>
-      <div className="flex flex-row items-stretch justify-stretch">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-black/50">
+      <span
+        className={`flex shrink-0 items-center justify-center text-sm py-1 w-full font-medium ${
+          connectionState === 'connected'
+            ? 'bg-green-600'
+            : connectionState === 'connecting'
+            ? 'bg-yellow-600'
+            : connectionState === 'failed'
+            ? 'bg-red-600'
+            : 'bg-slate-600'
+        }`}
+      >
+        {connectionState}
+      </span>
+      <OfferPanel
+        localSDP={localSDP}
+        createOffer={createOffer}
+        copyToClipboard={copyToClipboard}
+        copied={copied}
+      />
+      <div className={`flex ${isLandscape ? 'flex-row' : 'flex-col'} flex-1 min-h-0`}>
         <VideoComponent videoElementRef={localVideoRef} isLocal />
         <VideoComponent videoElementRef={remoteVideoRef} isLocal={false} />
       </div>
+      <AnswerPanel
+        remoteSDP={remoteSDP}
+        handleSetRemoteSDP={handleSetRemoteSDP}
+        handleApplyRemoteSDP={handleApplyRemoteSDP}
+        createAnswer={createAnswer}
+      />
     </div>
   );
 }
