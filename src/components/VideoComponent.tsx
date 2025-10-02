@@ -30,7 +30,7 @@ export const VideoComponent = ({
       <video
         ref={videoElementRef}
         autoPlay
-        muted
+        muted={isLocal}
         playsInline
         className={cn(
           'h-full',

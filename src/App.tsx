@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { VideoComponent } from './components/VideoComponent';
 import { AnswerPanel } from './components/AnswerPanel';
 import { OfferPanel } from './components/OfferPanel';
+import { Button } from './components/ui/button';
+import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
 
 const iceServers = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -14,6 +16,8 @@ export function App() {
   const [connectionState, setConnectionState] = useState('disconnected');
   const [isOfferer, setIsOfferer] = useState<boolean | null>(null);
   const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+  const [isMicEnabled, setIsMicEnabled] = useState(true);
+  const [isCameraEnabled, setIsCameraEnabled] = useState(true);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -130,6 +134,24 @@ export function App() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const toggleMic = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach(track => {
+        track.enabled = !track.enabled;
+      });
+      setIsMicEnabled(!isMicEnabled);
+    }
+  };
+
+  const toggleCamera = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach(track => {
+        track.enabled = !track.enabled;
+      });
+      setIsCameraEnabled(!isCameraEnabled);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-black/50">
       <span
@@ -151,6 +173,26 @@ export function App() {
         copyToClipboard={copyToClipboard}
         copied={copied}
       />
+      <div className="flex gap-2 p-2 bg-slate-800 justify-center">
+        <Button
+          size="icon"
+          variant={isMicEnabled ? "default" : "destructive"}
+          onClick={toggleMic}
+          title={isMicEnabled ? "Mute microphone" : "Unmute microphone"}
+          className="size-10"
+        >
+          {isMicEnabled ? <Mic className="size-5" /> : <MicOff className="size-5" />}
+        </Button>
+        <Button
+          size="icon"
+          variant={isCameraEnabled ? "default" : "destructive"}
+          onClick={toggleCamera}
+          title={isCameraEnabled ? "Turn off camera" : "Turn on camera"}
+          className="size-10"
+        >
+          {isCameraEnabled ? <Video className="size-5" /> : <VideoOff className="size-5" />}
+        </Button>
+      </div>
       <div className={`flex ${isLandscape ? 'flex-row' : 'flex-col'} flex-1 min-h-0`}>
         <VideoComponent videoElementRef={localVideoRef} isLocal />
         <VideoComponent videoElementRef={remoteVideoRef} isLocal={false} />
