@@ -60,6 +60,8 @@ export function App() {
 
   // Track if we've already initialized from URL params
   const initializedFromUrl = useRef(false);
+  // Track if the current SDP generation was user-initiated (for clipboard access)
+  const userInitiatedAction = useRef(false);
 
   // Show media error as toast
   useEffect(() => {
@@ -87,6 +89,7 @@ export function App() {
     // Only auto-answer if we have remote SDP, no local SDP yet, and haven't answered yet
     if (remoteSDP && !localSDP && !hasAutoAnswered.current && isOfferer === null) {
       hasAutoAnswered.current = true;
+      // Don't set userInitiatedAction - this is automatic
       createAnswer();
     }
   }, [remoteSDP, localSDP, isOfferer, createAnswer]);
@@ -117,24 +120,44 @@ export function App() {
       const type = isOfferer ? 'offer' : 'answer';
       const url = createSDPUrl(localSDP, type);
 
-      // Try to auto-copy to clipboard (may fail in Safari)
-      navigator.clipboard
-        .writeText(url)
-        .then(() => {
-          toast({
-            title: 'Copied!',
-            description: `${type === 'offer' ? 'Offer' : 'Answer'} URL copied to clipboard`,
+      // Only auto-copy if this was a user-initiated action
+      if (userInitiatedAction.current) {
+        userInitiatedAction.current = false; // Reset flag
+        navigator.clipboard
+          .writeText(url)
+          .then(() => {
+            toast({
+              title: 'Copied!',
+              description: `${type === 'offer' ? 'Offer' : 'Answer'} URL copied to clipboard`,
+            });
+          })
+          .catch((err) => {
+            console.error('Failed to auto-copy to clipboard:', err);
+            toast({
+              title: `${type === 'offer' ? 'Offer' : 'Answer'} generated`,
+              description: 'Click the copy button to copy to clipboard',
+            });
           });
-        })
-        .catch((err) => {
-          console.error('Failed to auto-copy to clipboard:', err);
-          toast({
-            title: `${type === 'offer' ? 'Offer' : 'Answer'} generated`,
-            description: 'Click the copy button to copy to clipboard',
-          });
+      } else {
+        // Auto-generated (not user-initiated) - just show notification
+        toast({
+          title: `${type === 'offer' ? 'Offer' : 'Answer'} generated`,
+          description: 'Click the copy button to copy to clipboard',
         });
+      }
     }
   }, [localSDP, isOfferer, toast]);
+
+  // Wrapper for user-initiated offer creation
+  const handleCreateOffer = useCallback(() => {
+    userInitiatedAction.current = true;
+    createOffer();
+  }, [createOffer]);
+
+  // Handler for when user clicks paste button
+  const handlePasteClick = useCallback(() => {
+    userInitiatedAction.current = true;
+  }, []);
 
   // Copy to clipboard helper (for manual copy button)
   const copyToClipboard = useCallback(
@@ -173,7 +196,7 @@ export function App() {
       </span>
       <OfferPanel
         localSDP={localSDP}
-        createOffer={createOffer}
+        createOffer={handleCreateOffer}
         copyToClipboard={copyToClipboard}
         isCreatingOffer={isCreatingOffer}
       />
@@ -235,6 +258,7 @@ export function App() {
       <AnswerPanel
         remoteSDP={remoteSDP}
         handleSetRemoteSDP={setRemoteSDP}
+        onPasteClick={handlePasteClick}
       />
       {canRetry && connectionState === 'failed' && (
         <div className="flex items-center justify-center p-4 bg-red-600">

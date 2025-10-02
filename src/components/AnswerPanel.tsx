@@ -11,11 +11,14 @@ import { extractSDPFromText } from '../lib/url-utils';
 export const AnswerPanel = ({
   remoteSDP,
   handleSetRemoteSDP,
+  onPasteClick,
 }: {
   remoteSDP: string;
   handleSetRemoteSDP: (sdp: string) => void;
+  onPasteClick?: () => void;
 }) => {
   const handlePaste = async () => {
+    onPasteClick?.(); // Notify parent that paste was user-initiated
     try {
       const text = await navigator.clipboard.readText();
       const sdp = extractSDPFromText(text);
