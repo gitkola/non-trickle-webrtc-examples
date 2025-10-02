@@ -1,111 +1,59 @@
----
-description: Use Bun instead of Node.js, npm, pnpm, or vite.
-globs: "*.ts, *.tsx, *.html, *.css, *.js, *.jsx, package.json"
-alwaysApply: false
----
+# CLAUDE.md
 
-Default to using Bun instead of Node.js.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Bun automatically loads .env, so don't use dotenv.
+## Project Overview
 
-## APIs
+A WebRTC demonstration application for non-trickle ICE negotiation. Built with Bun runtime, React 19, Tailwind CSS 4, and shadcn/ui components.
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+## Development Commands
 
-## Testing
-
-Use `bun test` to run tests.
-
-```ts#index.test.ts
-import { test, expect } from "bun:test";
-
-test("hello world", () => {
-  expect(1).toBe(1);
-});
+### Starting Development Server
+```bash
+bun dev              # Start dev server with HMR at http://localhost:3000
 ```
 
-## Frontend
-
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
-
-Server:
-
-```ts#index.ts
-import index from "./index.html"
-
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
-  }
-})
+### Production
+```bash
+bun start            # Run production server
+bun run build        # Build for production (outputs to dist/)
 ```
 
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
+### Build System
+The project uses a custom build script ([build.ts](build.ts)) that:
+- Scans for all HTML files in `src/`
+- Bundles with Tailwind CSS via `bun-plugin-tailwind`
+- Supports CLI arguments for build configuration (run `bun run build.ts --help`)
 
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
+## Architecture
 
-With the following `frontend.tsx`:
+### Server ([src/index.tsx](src/index.tsx))
+- Uses `Bun.serve()` with route-based routing (no Express)
+- Serves HTML with automatic bundling and HMR in development
+- HTML imports directly support React/TSX without separate bundler
+- Development mode includes browser console echoing and hot reload
 
-```tsx#frontend.tsx
-import React from "react";
+### Frontend Structure
+- **Entry point**: [src/index.html](src/index.html) imports [src/frontend.tsx](src/frontend.tsx)
+- **Main app**: [src/App.tsx](src/App.tsx) - WebRTC connection orchestration
+- **Components**: [src/components/](src/components/) - UI components including VideoComponent
+- **Styling**: [styles/globals.css](styles/globals.css) with Tailwind CSS 4
 
-// import .css files directly and it works
-import './index.css';
+### WebRTC Implementation ([src/App.tsx](src/App.tsx))
+- Manual SDP exchange (non-trickle ICE) - users copy/paste offers and answers
+- Uses Google STUN server for NAT traversal
+- Maintains peer connection, local/remote streams, and ICE candidates in refs
+- Connection states: disconnected → connecting → connected/failed
 
-import { createRoot } from "react-dom/client";
+### UI Components
+- Uses shadcn/ui components (New York style) in [src/components/ui/](src/components/ui/)
+- Path aliases: `@/` maps to `src/` (configured in [tsconfig.json](tsconfig.json) and [components.json](components.json))
+- Icons from `lucide-react`
 
-const root = createRoot(document.body);
+## Key Technologies
 
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
-
-```sh
-bun --hot ./index.ts
-```
-
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.md`.
+- **Runtime**: Bun (not Node.js)
+- **Bundler**: Bun's built-in bundler with HTML imports (not Vite/Webpack)
+- **Styling**: Tailwind CSS 4 with CSS variables
+- **State**: React hooks (useState, useRef, useEffect)
+- **WebRTC**: Native browser WebRTC APIs
