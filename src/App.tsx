@@ -62,6 +62,27 @@ export function App() {
   const initializedFromUrl = useRef(false);
   // Track if the current SDP generation was user-initiated (for clipboard access)
   const userInitiatedAction = useRef(false);
+  // Track if local media stream is ready
+  const [isLocalStreamReady, setIsLocalStreamReady] = useState(false);
+
+  // Check if local stream is ready
+  useEffect(() => {
+    const checkStream = () => {
+      const hasLocalTracks = localStreamRef.current && localStreamRef.current.getTracks().length > 0;
+      if (hasLocalTracks) {
+        setIsLocalStreamReady(true);
+      }
+    };
+
+    // Check immediately
+    checkStream();
+
+    // Also check periodically until ready (for race conditions)
+    if (!isLocalStreamReady) {
+      const interval = setInterval(checkStream, 100);
+      return () => clearInterval(interval);
+    }
+  }, [localStreamRef, isLocalStreamReady]);
 
   // Show media error as toast
   useEffect(() => {
@@ -87,12 +108,13 @@ export function App() {
   const hasAutoAnswered = useRef(false);
   useEffect(() => {
     // Only auto-answer if we have remote SDP, no local SDP yet, and haven't answered yet
-    if (remoteSDP && !localSDP && !hasAutoAnswered.current && isOfferer === null) {
+    // AND local stream is ready (has tracks)
+    if (remoteSDP && !localSDP && !hasAutoAnswered.current && isOfferer === null && isLocalStreamReady) {
       hasAutoAnswered.current = true;
       // Don't set userInitiatedAction - this is automatic
       createAnswer();
     }
-  }, [remoteSDP, localSDP, isOfferer, createAnswer]);
+  }, [remoteSDP, localSDP, isOfferer, createAnswer, isLocalStreamReady]);
 
   // Reset auto-answer flag when hanging up
   useEffect(() => {
