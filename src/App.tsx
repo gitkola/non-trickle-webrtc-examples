@@ -10,6 +10,45 @@ const iceServers = {
   iceTransportPolicy: 'all' as RTCIceTransportPolicy,
 };
 
+// Compress string using gzip and encode to base64
+async function compressString(str: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const compressionStream = new CompressionStream('gzip');
+  const writer = compressionStream.writable.getWriter();
+  writer.write(data);
+  writer.close();
+  const compressedData = await new Response(compressionStream.readable).arrayBuffer();
+  const bytes = new Uint8Array(compressedData);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const base64 = btoa(binary);
+  return base64;
+}
+
+// Decompress base64 string using gzip
+async function decompressString(base64: string): Promise<string> {
+  try {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const decompressionStream = new DecompressionStream('gzip');
+    const writer = decompressionStream.writable.getWriter();
+    writer.write(bytes);
+    writer.close();
+    const decompressedData = await new Response(decompressionStream.readable).arrayBuffer();
+    const decoder = new TextDecoder();
+    return decoder.decode(decompressedData);
+  } catch (error) {
+    // If decompression fails, return original string (might not be compressed)
+    throw error;
+  }
+}
+
 export function App() {
   const [localSDP, setLocalSDP] = useState('');
   const [remoteSDP, setRemoteSDP] = useState('');
@@ -78,14 +117,15 @@ export function App() {
       pcRef.current.ontrack = (event) => {
         remoteVideoRef.current.srcObject ??= event.streams[0];
       };
-      pcRef.current.onicecandidate = (event) => {
+      pcRef.current.onicecandidate = async (event) => {
         if (event.candidate) {
           iceCandidatesRef.current.push(event.candidate);
         } else {
-          pcRef.current?.localDescription &&
-            setLocalSDP(
-              JSON.stringify(pcRef.current.localDescription, null, 2)
-            );
+          if (pcRef.current?.localDescription) {
+            const sdpString = JSON.stringify(pcRef.current.localDescription);
+            const compressed = await compressString(sdpString);
+            setLocalSDP(compressed);
+          }
         }
       };
       pcRef.current.onconnectionstatechange = () => {
@@ -114,7 +154,15 @@ export function App() {
     }
 
     try {
-      const sdp = JSON.parse(remoteSDP);
+      // Try to decompress first, if that fails assume it's uncompressed JSON
+      let sdpString = remoteSDP;
+      try {
+        sdpString = await decompressString(remoteSDP);
+      } catch {
+        // If decompression fails, use original string (might be uncompressed JSON)
+      }
+
+      const sdp = JSON.parse(sdpString);
       await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
 
       if (sdp.type === 'offer' && !isOfferer) {
