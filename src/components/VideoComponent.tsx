@@ -7,7 +7,7 @@ export const VideoComponent = ({
   videoElementRef,
   isLocal,
 }: {
-  videoElementRef: React.RefObject<HTMLVideoElement>;
+  videoElementRef: React.RefObject<HTMLVideoElement | null>;
   isLocal: boolean;
 }) => {
   const [resizeMode, setResizeMode] = useState<
