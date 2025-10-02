@@ -25,6 +25,8 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
   const [iceConnectionState, setIceConnectionState] =
     useState<RTCIceConnectionState>('new');
   const [isOfferer, setIsOfferer] = useState<boolean | null>(null);
+  const [isCreatingOffer, setIsCreatingOffer] = useState(false);
+  const [isCreatingAnswer, setIsCreatingAnswer] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -140,12 +142,22 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
 
   // Create offer
   const createOffer = useCallback(async () => {
-    await initializeConnection(true);
+    setIsCreatingOffer(true);
+    try {
+      await initializeConnection(true);
+    } finally {
+      setIsCreatingOffer(false);
+    }
   }, [initializeConnection]);
 
   // Create answer
   const createAnswer = useCallback(async () => {
-    await initializeConnection(false);
+    setIsCreatingAnswer(true);
+    try {
+      await initializeConnection(false);
+    } finally {
+      setIsCreatingAnswer(false);
+    }
   }, [initializeConnection]);
 
   // Validate and apply remote SDP
@@ -199,6 +211,8 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
     setLocalSDP('');
     setRemoteSDP('');
     setIsOfferer(null);
+    setIsCreatingOffer(false);
+    setIsCreatingAnswer(false);
   }, [cleanupPeerConnection]);
 
   // Cleanup on unmount
@@ -208,6 +222,13 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
     };
   }, [cleanupPeerConnection]);
 
+  // Auto-apply remote SDP when it changes
+  useEffect(() => {
+    if (remoteSDP && pcRef.current) {
+      handleApplyRemoteSDP();
+    }
+  }, [remoteSDP, handleApplyRemoteSDP]);
+
   return {
     localSDP,
     remoteSDP,
@@ -215,6 +236,8 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
     connectionState,
     iceConnectionState,
     isOfferer,
+    isCreatingOffer,
+    isCreatingAnswer,
     remoteVideoRef,
     createOffer,
     createAnswer,
