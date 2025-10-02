@@ -9,9 +9,16 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 
 import { App } from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { Toaster } from './components/ui/toaster';
 
 const elem = document.getElementById('root')!;
-const app = <App />;
+const app = (
+  <ErrorBoundary>
+    <App />
+    <Toaster />
+  </ErrorBoundary>
+);
 
 if (import.meta.hot) {
   // With hot module reloading, `import.meta.hot.data` is persisted.

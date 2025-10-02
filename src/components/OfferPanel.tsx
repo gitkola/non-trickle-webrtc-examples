@@ -1,34 +1,37 @@
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { cn } from '../lib/utils';
-import { ArrowUp } from 'lucide-react';
-import { Copy, Check } from 'lucide-react';
+import { ArrowUp, Copy, Check } from 'lucide-react';
+import {
+  PANEL_BUTTON_STYLES,
+  PANEL_INPUT_STYLES,
+  ICON_BUTTON_SIZE,
+} from '../lib/constants';
 
 export const OfferPanel = ({
   localSDP,
   createOffer,
   copyToClipboard,
-  copied,
 }: {
   localSDP: string;
   createOffer: () => void;
   copyToClipboard: (text: string) => void;
-  copied: boolean;
 }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    copyToClipboard(localSDP);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="flex items-center w-full shrink-0">
       <Button
         variant="default"
         onClick={createOffer}
-        className={cn(
-          'shrink-0',
-          'h-12',
-          'border-0',
-          'rounded-none',
-          'bg-teal-500',
-          'hover:bg-teal-600',
-          'active:bg-teal-700'
-        )}
+        className={PANEL_BUTTON_STYLES}
       >
         <ArrowUp className="size-6" />
         <span className="font-semibold">Create Offer</span>
@@ -36,24 +39,15 @@ export const OfferPanel = ({
       <Input
         value={localSDP}
         readOnly
-        className={cn(
-          'h-12',
-          'w-full',
-          'px-2',
-          'font-mono',
-          'text-background',
-          'bg-foreground',
-          'rounded-none',
-          'border-none'
-        )}
+        className={PANEL_INPUT_STYLES}
         placeholder="Your SDP will appear here..."
       />
       <Button
         variant="default"
         disabled={!localSDP}
-        onClick={() => copyToClipboard(localSDP)}
+        onClick={handleCopy}
         title="Copy to clipboard"
-        className="shrink-0 size-12 border-0 rounded-none bg-teal-500 hover:bg-teal-600 active:bg-teal-700"
+        className={cn(PANEL_BUTTON_STYLES, ICON_BUTTON_SIZE)}
       >
         <Check
           className={cn(
