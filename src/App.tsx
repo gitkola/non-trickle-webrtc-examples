@@ -81,6 +81,23 @@ export function App() {
     }
   }, [setRemoteSDP]);
 
+  // Auto-generate answer when offer is pasted/received
+  const hasAutoAnswered = useRef(false);
+  useEffect(() => {
+    // Only auto-answer if we have remote SDP, no local SDP yet, and haven't answered yet
+    if (remoteSDP && !localSDP && !hasAutoAnswered.current && isOfferer === null) {
+      hasAutoAnswered.current = true;
+      createAnswer();
+    }
+  }, [remoteSDP, localSDP, isOfferer, createAnswer]);
+
+  // Reset auto-answer flag when hanging up
+  useEffect(() => {
+    if (connectionState === 'disconnected') {
+      hasAutoAnswered.current = false;
+    }
+  }, [connectionState]);
+
   // Handle window resize for landscape/portrait detection
   useEffect(() => {
     const handleResize = () => {
@@ -100,12 +117,22 @@ export function App() {
       const type = isOfferer ? 'offer' : 'answer';
       const url = createSDPUrl(localSDP, type);
 
-      // Auto-copy to clipboard
-      navigator.clipboard.writeText(url);
-      toast({
-        title: 'Copied!',
-        description: `${type === 'offer' ? 'Offer' : 'Answer'} URL copied to clipboard`,
-      });
+      // Try to auto-copy to clipboard (may fail in Safari)
+      navigator.clipboard
+        .writeText(url)
+        .then(() => {
+          toast({
+            title: 'Copied!',
+            description: `${type === 'offer' ? 'Offer' : 'Answer'} URL copied to clipboard`,
+          });
+        })
+        .catch((err) => {
+          console.error('Failed to auto-copy to clipboard:', err);
+          toast({
+            title: `${type === 'offer' ? 'Offer' : 'Answer'} generated`,
+            description: 'Click the copy button to copy to clipboard',
+          });
+        });
     }
   }, [localSDP, isOfferer, toast]);
 
