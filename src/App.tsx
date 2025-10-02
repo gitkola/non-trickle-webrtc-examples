@@ -1,12 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import {
-  Copy,
-  Clipboard,
-  Check,
-  PhoneCall,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-react';
+import { Copy, Clipboard, Check, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { cn } from './lib/utils';
@@ -198,7 +191,7 @@ export function App() {
         <div className="flex items-center justify-start">
           <Button
             variant="default"
-            onClick={() => initializeConnection(false)}
+            onClick={createAnswer}
             className="shrink-0 h-12 border-0 rounded-none bg-teal-500 hover:bg-teal-600 active:bg-teal-700"
           >
             <ArrowDown className="size-6" />
