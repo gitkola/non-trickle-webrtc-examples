@@ -1,48 +1,52 @@
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { cn } from '../lib/utils';
-import { ArrowDown, Clipboard } from 'lucide-react';
+import { Clipboard } from 'lucide-react';
 import {
   PANEL_BUTTON_STYLES,
   PANEL_INPUT_STYLES,
-  ICON_BUTTON_SIZE,
 } from '../lib/constants';
+import { extractSDPFromText } from '../lib/url-utils';
 
 export const AnswerPanel = ({
   remoteSDP,
   handleSetRemoteSDP,
-  handleApplyRemoteSDP,
-  createAnswer,
+  onPasteClick,
 }: {
   remoteSDP: string;
   handleSetRemoteSDP: (sdp: string) => void;
-  handleApplyRemoteSDP: () => void;
-  createAnswer: () => void;
+  onPasteClick?: () => void;
 }) => {
+  const handlePaste = async () => {
+    onPasteClick?.(); // Notify parent that paste was user-initiated
+    try {
+      const text = await navigator.clipboard.readText();
+      const sdp = extractSDPFromText(text);
+      handleSetRemoteSDP(sdp);
+    } catch (err) {
+      console.error('Failed to read clipboard:', err);
+    }
+  };
+
   return (
     <div className="flex items-center w-full shrink-0">
       <Button
         variant="default"
-        onClick={createAnswer}
+        onClick={handlePaste}
         className={PANEL_BUTTON_STYLES}
       >
-        <ArrowDown className="size-6" />
-        <span className="font-semibold">Create Answer</span>
+        <Clipboard className="size-6" />
+        <span className="font-semibold">Paste Remote SDP</span>
       </Button>
       <Input
         value={remoteSDP}
-        onChange={(e) => handleSetRemoteSDP(e.target.value)}
+        onChange={(e) => {
+          const sdp = extractSDPFromText(e.target.value);
+          handleSetRemoteSDP(sdp);
+        }}
         className={PANEL_INPUT_STYLES}
         placeholder="Paste remote SDP here..."
       />
-      <Button
-        variant="default"
-        onClick={handleApplyRemoteSDP}
-        title="Apply remote SDP"
-        className={cn(PANEL_BUTTON_STYLES, ICON_BUTTON_SIZE)}
-      >
-        <Clipboard className="size-6" />
-      </Button>
     </div>
   );
 };

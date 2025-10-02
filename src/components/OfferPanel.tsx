@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { cn } from '../lib/utils';
-import { ArrowUp, Copy, Check } from 'lucide-react';
+import { ArrowUp, Copy, Check, Loader2 } from 'lucide-react';
 import {
   PANEL_BUTTON_STYLES,
   PANEL_INPUT_STYLES,
@@ -13,10 +13,12 @@ export const OfferPanel = ({
   localSDP,
   createOffer,
   copyToClipboard,
+  isCreatingOffer,
 }: {
   localSDP: string;
   createOffer: () => void;
   copyToClipboard: (text: string) => void;
+  isCreatingOffer: boolean;
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -31,9 +33,14 @@ export const OfferPanel = ({
       <Button
         variant="default"
         onClick={createOffer}
+        disabled={isCreatingOffer}
         className={PANEL_BUTTON_STYLES}
       >
-        <ArrowUp className="size-6" />
+        {isCreatingOffer ? (
+          <Loader2 className="size-6 animate-spin" />
+        ) : (
+          <ArrowUp className="size-6" />
+        )}
         <span className="font-semibold">Create Offer</span>
       </Button>
       <Input
