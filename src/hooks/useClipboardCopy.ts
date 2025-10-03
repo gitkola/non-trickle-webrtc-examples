@@ -1,14 +1,10 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { createSDPUrl } from '@/lib/url-utils';
+import { toast } from '@/components/ui/use-toast';
 
 interface UseClipboardCopyProps {
   localSDP: string;
   isOfferer: boolean | null;
-  toast: (options: {
-    title: string;
-    description: string;
-    variant?: 'default' | 'destructive';
-  }) => void;
 }
 
 interface UseClipboardCopyReturn {
@@ -22,7 +18,6 @@ interface UseClipboardCopyReturn {
 export function useClipboardCopy({
   localSDP,
   isOfferer,
-  toast,
 }: UseClipboardCopyProps): UseClipboardCopyReturn {
   const previousLocalSDP = useRef('');
   const userInitiatedAction = useRef(false);
@@ -34,7 +29,9 @@ export function useClipboardCopy({
 
       // Offers get URLs, answers get raw SDP
       const isOffer = isOfferer === true;
-      const contentToCopy = isOffer ? createSDPUrl(localSDP, 'offer') : localSDP;
+      const contentToCopy = isOffer
+        ? createSDPUrl(localSDP, 'offer')
+        : localSDP;
       const contentType = isOffer ? 'Offer URL' : 'Answer SDP';
 
       // Only auto-copy if this was a user-initiated action
@@ -43,13 +40,13 @@ export function useClipboardCopy({
         navigator.clipboard
           .writeText(contentToCopy)
           .then(() => {
-            toast({
-              title: 'Copied!',
-              description: `${contentType} copied to clipboard`,
-            });
+            // toast({
+            //   title: 'Copied!',
+            //   description: `${contentType} copied to clipboard`,
+            // });
           })
           .catch((err) => {
-            console.error('Failed to auto-copy to clipboard:', err);
+            // console.error('Failed to auto-copy to clipboard:', err);
             toast({
               title: `${isOffer ? 'Offer' : 'Answer'} generated`,
               description: 'Click the copy button to copy to clipboard',
@@ -58,12 +55,12 @@ export function useClipboardCopy({
       } else {
         // Auto-generated (not user-initiated) - just show notification
         toast({
-          title: `${isOffer ? 'Offer' : 'Answer'} generated`,
+          // title: `${isOffer ? 'Offer' : 'Answer'} generated`,
           description: 'Click the copy button to copy to clipboard',
         });
       }
     }
-  }, [localSDP, isOfferer, toast]);
+  }, [localSDP, isOfferer]);
 
   // Mark next action as user-initiated (for clipboard access)
   const markUserInitiated = useCallback(() => {

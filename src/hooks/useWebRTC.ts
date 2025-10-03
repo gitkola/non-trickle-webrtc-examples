@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { z } from 'zod';
 import { compressString, decompressString } from '@/lib/sdp-compression';
 import { ICE_SERVERS, CONNECTION_TIMEOUT_MS } from '@/lib/constants';
+import { clearUrlParams } from './useUrlParams';
 
 // Zod schema for SDP validation
 const SDPSchema = z.object({
@@ -142,6 +143,7 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
 
   // Create offer
   const createOffer = useCallback(async () => {
+    if (isCreatingOffer) return;
     setIsCreatingOffer(true);
     try {
       await initializeConnection(true);
@@ -152,6 +154,7 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
 
   // Create answer
   const createAnswer = useCallback(async () => {
+    if (isCreatingAnswer) return;
     setIsCreatingAnswer(true);
     try {
       await initializeConnection(false);
@@ -213,6 +216,7 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
     setIsOfferer(null);
     setIsCreatingOffer(false);
     setIsCreatingAnswer(false);
+    clearUrlParams();
   }, [cleanupPeerConnection]);
 
   // Cleanup on unmount
@@ -241,7 +245,7 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
     remoteVideoRef,
     createOffer,
     createAnswer,
-    handleApplyRemoteSDP,
+    handleApplyRemoteSDP, // TODO: check if this is needed
     hangup,
   };
 }

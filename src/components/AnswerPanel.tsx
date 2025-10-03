@@ -1,24 +1,25 @@
 import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { cn } from '../lib/utils';
-import { Clipboard } from 'lucide-react';
-import {
-  PANEL_BUTTON_STYLES,
-  PANEL_INPUT_STYLES,
-} from '../lib/constants';
+import { ArrowDown } from 'lucide-react';
+import { PANEL_BUTTON_STYLES } from '../lib/constants';
 import { extractSDPFromText } from '../lib/url-utils';
+import { useClipboardCopy } from '../hooks/useClipboardCopy';
+import { cn } from '../lib/utils';
 
 export const AnswerPanel = ({
-  remoteSDP,
+  localSDP,
+  isOfferer,
   handleSetRemoteSDP,
-  onPasteClick,
 }: {
-  remoteSDP: string;
+  localSDP: string;
+  isOfferer: boolean | null;
   handleSetRemoteSDP: (sdp: string) => void;
-  onPasteClick?: () => void;
 }) => {
+  const { markUserInitiated } = useClipboardCopy({
+    localSDP,
+    isOfferer,
+  });
   const handlePaste = async () => {
-    onPasteClick?.(); // Notify parent that paste was user-initiated
+    markUserInitiated();
     try {
       const text = await navigator.clipboard.readText();
       const sdp = extractSDPFromText(text);
@@ -29,24 +30,13 @@ export const AnswerPanel = ({
   };
 
   return (
-    <div className="flex items-center w-full shrink-0">
-      <Button
-        variant="default"
-        onClick={handlePaste}
-        className={PANEL_BUTTON_STYLES}
-      >
-        <Clipboard className="size-6" />
-        <span className="font-semibold">Paste Remote SDP</span>
-      </Button>
-      <Input
-        value={remoteSDP}
-        onChange={(e) => {
-          const sdp = extractSDPFromText(e.target.value);
-          handleSetRemoteSDP(sdp);
-        }}
-        className={PANEL_INPUT_STYLES}
-        placeholder="Paste remote SDP here..."
-      />
-    </div>
+    <Button
+      variant="default"
+      onClick={handlePaste}
+      className={cn(PANEL_BUTTON_STYLES, 'flex flex-1 shrink-0')}
+    >
+      <ArrowDown className="size-6" />
+      <span className="font-semibold">Paste Remote SDP</span>
+    </Button>
   );
 };
