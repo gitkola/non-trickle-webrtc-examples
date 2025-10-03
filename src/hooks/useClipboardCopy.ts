@@ -27,39 +27,38 @@ export function useClipboardCopy({
   const previousLocalSDP = useRef('');
   const userInitiatedAction = useRef(false);
 
-  // Auto-copy offer/answer URL when generated
+  // Auto-copy offer URL or answer SDP when generated
   useEffect(() => {
     if (localSDP && localSDP !== previousLocalSDP.current) {
       previousLocalSDP.current = localSDP;
 
-      // Determine type based on isOfferer
-      const type = isOfferer ? 'offer' : 'answer';
-      const url = createSDPUrl(localSDP, type);
+      // Offers get URLs, answers get raw SDP
+      const isOffer = isOfferer === true;
+      const contentToCopy = isOffer ? createSDPUrl(localSDP, 'offer') : localSDP;
+      const contentType = isOffer ? 'Offer URL' : 'Answer SDP';
 
       // Only auto-copy if this was a user-initiated action
       if (userInitiatedAction.current) {
         userInitiatedAction.current = false; // Reset flag
         navigator.clipboard
-          .writeText(url)
+          .writeText(contentToCopy)
           .then(() => {
             toast({
               title: 'Copied!',
-              description: `${
-                type === 'offer' ? 'Offer' : 'Answer'
-              } URL copied to clipboard`,
+              description: `${contentType} copied to clipboard`,
             });
           })
           .catch((err) => {
             console.error('Failed to auto-copy to clipboard:', err);
             toast({
-              title: `${type === 'offer' ? 'Offer' : 'Answer'} generated`,
+              title: `${isOffer ? 'Offer' : 'Answer'} generated`,
               description: 'Click the copy button to copy to clipboard',
             });
           });
       } else {
         // Auto-generated (not user-initiated) - just show notification
         toast({
-          title: `${type === 'offer' ? 'Offer' : 'Answer'} generated`,
+          title: `${isOffer ? 'Offer' : 'Answer'} generated`,
           description: 'Click the copy button to copy to clipboard',
         });
       }
@@ -75,14 +74,16 @@ export function useClipboardCopy({
   const copyToClipboard = useCallback(
     (sdp: string) => {
       if (!sdp) return;
-      const type = isOfferer ? 'offer' : 'answer';
-      const url = createSDPUrl(sdp, type);
-      navigator.clipboard.writeText(url);
+
+      // Offers get URLs, answers get raw SDP
+      const isOffer = isOfferer === true;
+      const contentToCopy = isOffer ? createSDPUrl(sdp, 'offer') : sdp;
+      const contentType = isOffer ? 'Offer URL' : 'Answer SDP';
+
+      navigator.clipboard.writeText(contentToCopy);
       toast({
         title: 'Copied!',
-        description: `${
-          type === 'offer' ? 'Offer' : 'Answer'
-        } URL copied to clipboard`,
+        description: `${contentType} copied to clipboard`,
       });
     },
     [isOfferer, toast]
