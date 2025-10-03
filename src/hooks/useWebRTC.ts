@@ -239,7 +239,6 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
     remoteVideoRef,
     createOffer,
     createAnswer,
-    handleApplyRemoteSDP, // TODO: check if this is needed
     hangup,
   };
 }
