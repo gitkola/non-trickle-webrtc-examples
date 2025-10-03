@@ -1,18 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { VideoComponent } from './components/VideoComponent';
 import { AnswerPanel } from './components/AnswerPanel';
 import { OfferPanel } from './components/OfferPanel';
 import { Button } from './components/ui/button';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, RefreshCw } from 'lucide-react';
 import { useMediaStream } from './hooks/useMediaStream';
 import { useWebRTC } from './hooks/useWebRTC';
 import { useToast } from './components/ui/use-toast';
 import { parseUrlParams, createSDPUrl } from './lib/url-utils';
+import { ConnectionIndicator } from './components/ConnectionIndicator';
+import { ControlPanel } from './components/ControlPanel';
+import { VideoGrid } from './components/VideoGrid';
 
 export function App() {
-  const [isLandscape, setIsLandscape] = useState(
-    window.innerWidth > window.innerHeight
-  );
   const { toast } = useToast();
 
   // Handle errors with toast notifications
@@ -68,7 +66,8 @@ export function App() {
   // Check if local stream is ready
   useEffect(() => {
     const checkStream = () => {
-      const hasLocalTracks = localStreamRef.current && localStreamRef.current.getTracks().length > 0;
+      const hasLocalTracks =
+        localStreamRef.current && localStreamRef.current.getTracks().length > 0;
       if (hasLocalTracks) {
         setIsLocalStreamReady(true);
       }
@@ -109,7 +108,13 @@ export function App() {
   useEffect(() => {
     // Only auto-answer if we have remote SDP, no local SDP yet, and haven't answered yet
     // AND local stream is ready (has tracks)
-    if (remoteSDP && !localSDP && !hasAutoAnswered.current && isOfferer === null && isLocalStreamReady) {
+    if (
+      remoteSDP &&
+      !localSDP &&
+      !hasAutoAnswered.current &&
+      isOfferer === null &&
+      isLocalStreamReady
+    ) {
       hasAutoAnswered.current = true;
       // Don't set userInitiatedAction - this is automatic
       createAnswer();
@@ -122,15 +127,6 @@ export function App() {
       hasAutoAnswered.current = false;
     }
   }, [connectionState]);
-
-  // Handle window resize for landscape/portrait detection
-  useEffect(() => {
-    const handleResize = () => {
-      setIsLandscape(window.innerWidth > window.innerHeight);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Auto-copy offer/answer URL when generated
   const previousLocalSDP = useRef('');
@@ -150,7 +146,9 @@ export function App() {
           .then(() => {
             toast({
               title: 'Copied!',
-              description: `${type === 'offer' ? 'Offer' : 'Answer'} URL copied to clipboard`,
+              description: `${
+                type === 'offer' ? 'Offer' : 'Answer'
+              } URL copied to clipboard`,
             });
           })
           .catch((err) => {
@@ -190,93 +188,40 @@ export function App() {
       navigator.clipboard.writeText(url);
       toast({
         title: 'Copied!',
-        description: `${type === 'offer' ? 'Offer' : 'Answer'} URL copied to clipboard`,
+        description: `${
+          type === 'offer' ? 'Offer' : 'Answer'
+        } URL copied to clipboard`,
       });
     },
     [isOfferer, toast]
   );
 
   // Show reconnection option when failed
-  const canRetry =
-    connectionState === 'failed' || connectionState === 'disconnected';
+  const canRetry = ['failed', 'disconnected'].includes(connectionState);
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-black/50">
-      <span
-        className={`flex shrink-0 items-center justify-center text-sm py-1 w-full font-medium ${
-          connectionState === 'connected'
-            ? 'bg-green-600'
-            : connectionState === 'connecting'
-            ? 'bg-yellow-600'
-            : connectionState === 'failed'
-            ? 'bg-red-600'
-            : 'bg-slate-600'
-        }`}
-      >
-        {connectionState}{' '}
-        {iceConnectionState !== 'new' && `(ICE: ${iceConnectionState})`}
-      </span>
+      <ConnectionIndicator
+        connectionState={connectionState}
+        iceConnectionState={iceConnectionState}
+      />
       <OfferPanel
         localSDP={localSDP}
         createOffer={handleCreateOffer}
         copyToClipboard={copyToClipboard}
         isCreatingOffer={isCreatingOffer}
       />
-      <div className="flex gap-2 p-2 bg-slate-800 justify-center">
-        <Button
-          size="icon"
-          variant={isMicEnabled ? 'default' : 'destructive'}
-          onClick={toggleMic}
-          title={isMicEnabled ? 'Mute microphone' : 'Unmute microphone'}
-          className="size-10"
-        >
-          {isMicEnabled ? (
-            <Mic className="size-5" />
-          ) : (
-            <MicOff className="size-5" />
-          )}
-        </Button>
-        <Button
-          size="icon"
-          variant={isCameraEnabled ? 'default' : 'destructive'}
-          onClick={toggleCamera}
-          title={isCameraEnabled ? 'Turn off camera' : 'Turn on camera'}
-          className="size-10"
-        >
-          {isCameraEnabled ? (
-            <Video className="size-5" />
-          ) : (
-            <VideoOff className="size-5" />
-          )}
-        </Button>
-        <Button
-          size="icon"
-          variant="destructive"
-          onClick={hangup}
-          title="Hang up and close connection"
-          className="size-10"
-          disabled={connectionState === 'disconnected'}
-        >
-          <PhoneOff className="size-5" />
-        </Button>
-        <Button
-          size="icon"
-          variant="secondary"
-          onClick={() => window.location.reload()}
-          title="Reload page"
-          className="size-10"
-        >
-          <RefreshCw className="size-5" />
-        </Button>
-      </div>
-      <div
-        className={`flex ${
-          isLandscape ? 'flex-row' : 'flex-col'
-        } flex-1 min-h-0`}
-      >
-        <VideoComponent videoElementRef={localVideoRef} isLocal />
-        <VideoComponent videoElementRef={remoteVideoRef} isLocal={false} />
-      </div>
+      <ControlPanel
+        isMicEnabled={isMicEnabled}
+        isCameraEnabled={isCameraEnabled}
+        toggleMic={toggleMic}
+        toggleCamera={toggleCamera}
+        hangup={hangup}
+      />
+      <VideoGrid
+        localVideoRef={localVideoRef}
+        remoteVideoRef={remoteVideoRef}
+      />
       <AnswerPanel
         remoteSDP={remoteSDP}
         handleSetRemoteSDP={setRemoteSDP}
