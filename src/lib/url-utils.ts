@@ -25,11 +25,10 @@ export function createSDPUrl(sdp: string, type: 'offer' | 'answer'): string {
  * Parse URL parameters to extract offer or answer
  * @returns Object with offer and/or answer if present in URL
  */
-export function parseUrlParams(): { offer?: string; answer?: string } {
+export function parseUrlParams(): { offer?: string } {
   const params = new URLSearchParams(window.location.search);
   return {
     offer: params.get('offer') || undefined,
-    answer: params.get('answer') || undefined,
   };
 }
 
@@ -48,8 +47,7 @@ export function extractSDPFromText(text: string): string {
       const url = new URL(trimmed);
       // Try to extract offer or answer param
       const offer = url.searchParams.get('offer');
-      const answer = url.searchParams.get('answer');
-      return offer || answer || trimmed;
+      return offer || trimmed;
     } catch {
       // If URL parsing fails, return original text
       return trimmed;

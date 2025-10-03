@@ -18,15 +18,12 @@ export function useUrlParams(setRemoteSDP: (sdp: string) => void) {
 
   useEffect(() => {
     if (!initializedFromUrl.current) {
-      const { offer, answer } = parseUrlParams(); // TODO: We don't put answer in the URL isn't it?
+      const { offer } = parseUrlParams();
       if (offer) {
         setRemoteSDP(offer);
-        clearUrlParams();
-      } else if (answer) {
-        setRemoteSDP(answer);
         clearUrlParams();
       }
       initializedFromUrl.current = true;
     }
-  }, [setRemoteSDP]);
+  }, []);
 }
