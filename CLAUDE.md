@@ -46,7 +46,7 @@ The project uses a custom build script ([build.ts](build.ts)) that:
 - **[src/hooks/useStreamReady.ts](src/hooks/useStreamReady.ts)** - Tracks when media stream is ready (has tracks)
 - **[src/hooks/useUrlParams.ts](src/hooks/useUrlParams.ts)** - Parses URL parameters for offer initialization
 - **[src/hooks/useAutoAnswer.ts](src/hooks/useAutoAnswer.ts)** - Automatically generates answer when offer is received
-- **[src/hooks/useClipboardCopy.ts](src/hooks/useClipboardCopy.ts)** - Handles clipboard operations with browser permission handling
+- **[src/hooks/useClipboard.ts](src/hooks/useClipboard.ts)** - Handles clipboard operations with browser permission handling
 
 ### Utilities
 - **[src/lib/sdp-compression.ts](src/lib/sdp-compression.ts)** - Gzip compression/decompression for SDP strings

@@ -1,47 +1,33 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Button } from './ui/button';
-import { cn } from '../lib/utils';
+import { cn } from '@/lib/utils';
 import { ArrowUp, Copy, Check, Loader2 } from 'lucide-react';
-import { PANEL_BUTTON_STYLES } from '../lib/constants';
-import { useClipboardCopy } from '@/hooks/useClipboardCopy';
+import { PANEL_BUTTON_STYLES } from '@/lib/constants';
+import { useClipboard } from '@/hooks/useClipboard';
+import { createSDPUrl } from '@/lib/url-utils';
 
 export const OfferPanel = ({
   localSDP,
   createOffer,
-  isOfferer,
   isCreatingOffer,
 }: {
   localSDP: string;
   createOffer: () => void;
-  isOfferer: boolean | null;
   isCreatingOffer: boolean;
 }) => {
-  // Handle clipboard copying with user-initiated tracking
-  const { copyToClipboard, markUserInitiated } = useClipboardCopy({
-    localSDP,
-    isOfferer,
-  });
-  // TODO: check wouldn't it be better to get the `localSDP`, `createOffer`, `isOfferer`, `isCreatingOffer` directly from useWebRTC instead of passing it as a prop?
-  const [copied, setCopied] = useState(false);
+  const { copyToClipboard, copied } = useClipboard();
+  // TODO: check wouldn't it be better to get the `localSDP`, `createOffer`, `isCreatingOffer` directly from useWebRTC instead of passing it as a prop?
 
-  // Wrapper for user-initiated offer creation
-  const handleCreateOffer = useCallback(() => {
-    markUserInitiated();
-    createOffer();
-  }, [createOffer, markUserInitiated]);
-
-  const handleCopyOffer = () => {
-    copyToClipboard(localSDP);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const handleCopyOffer = useCallback(() => {
+    copyToClipboard(createSDPUrl(localSDP, 'offer'));
+  }, [localSDP]);
 
   const hasOffer = !!localSDP;
 
   return (
     <Button
       variant="default"
-      onClick={hasOffer ? handleCopyOffer : handleCreateOffer}
+      onClick={hasOffer ? handleCopyOffer : createOffer}
       disabled={isCreatingOffer}
       className={cn(
         PANEL_BUTTON_STYLES,

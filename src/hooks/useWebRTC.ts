@@ -107,6 +107,8 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
             const sdpString = JSON.stringify(pcRef.current.localDescription);
             const compressed = await compressString(sdpString);
             setLocalSDP(compressed);
+            setIsCreatingOffer(false);
+            setIsCreatingAnswer(false);
           }
         };
 
@@ -145,22 +147,14 @@ export function useWebRTC({ localStreamRef, onError }: UseWebRTCProps) {
   const createOffer = useCallback(async () => {
     if (isCreatingOffer) return;
     setIsCreatingOffer(true);
-    try {
-      await initializeConnection(true);
-    } finally {
-      setIsCreatingOffer(false);
-    }
+    await initializeConnection(true);
   }, [initializeConnection]);
 
   // Create answer
   const createAnswer = useCallback(async () => {
     if (isCreatingAnswer) return;
     setIsCreatingAnswer(true);
-    try {
-      await initializeConnection(false);
-    } finally {
-      setIsCreatingAnswer(false);
-    }
+    await initializeConnection(false);
   }, [initializeConnection]);
 
   // Validate and apply remote SDP

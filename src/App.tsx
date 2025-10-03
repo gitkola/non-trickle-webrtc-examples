@@ -46,6 +46,7 @@ export function App() {
     iceConnectionState,
     isOfferer,
     isCreatingOffer,
+    isCreatingAnswer,
     remoteVideoRef,
     createOffer,
     createAnswer,
@@ -89,12 +90,10 @@ export function App() {
         <OfferPanel
           localSDP={localSDP}
           createOffer={createOffer}
-          isOfferer={isOfferer}
           isCreatingOffer={isCreatingOffer}
         />
         <AnswerPanel
-          localSDP={localSDP}
-          isOfferer={isOfferer}
+          isCreatingAnswer={isCreatingAnswer}
           handleSetRemoteSDP={setRemoteSDP}
         />
       </div>
