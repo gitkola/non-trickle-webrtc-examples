@@ -45,11 +45,9 @@ export function App() {
     iceConnectionState,
     isOfferer,
     isCreatingOffer,
-    isCreatingAnswer,
     remoteVideoRef,
     createOffer,
     createAnswer,
-    handleApplyRemoteSDP,
     hangup,
   } = useWebRTC({
     localStreamRef,
