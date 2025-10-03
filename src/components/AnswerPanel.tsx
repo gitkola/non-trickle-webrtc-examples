@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { Button } from './ui/button';
 import { ArrowDown, Loader2 } from 'lucide-react';
 import { PANEL_BUTTON_STYLES } from '@/lib/constants';
@@ -15,7 +14,7 @@ export const AnswerPanel = ({
 }) => {
   const { pasteFromClipboard } = useClipboard();
 
-  const handlePaste = useCallback(async () => {
+  const handlePaste = async () => {
     try {
       const text = await pasteFromClipboard();
       const sdp = extractSDPFromText(text);
@@ -23,7 +22,7 @@ export const AnswerPanel = ({
     } catch (err) {
       console.error('Failed to read clipboard:', err);
     }
-  }, [pasteFromClipboard, handleSetRemoteSDP]);
+  };
 
   return (
     <Button

@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { ArrowUp, Copy, Check, Loader2 } from 'lucide-react';
@@ -18,9 +17,9 @@ export const OfferPanel = ({
   const { copyToClipboard, copied } = useClipboard();
   // TODO: check wouldn't it be better to get the `localSDP`, `createOffer`, `isCreatingOffer` directly from useWebRTC instead of passing it as a prop?
 
-  const handleCopyOffer = useCallback(() => {
-    copyToClipboard(createSDPUrl(localSDP, 'offer'));
-  }, [localSDP]);
+  const handleCopyOffer = async () => {
+    await copyToClipboard(createSDPUrl(localSDP, 'offer'));
+  };
 
   const hasOffer = !!localSDP;
 
