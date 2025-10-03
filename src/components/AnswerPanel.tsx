@@ -1,52 +1,45 @@
+import { useCallback } from 'react';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { cn } from '../lib/utils';
-import { Clipboard } from 'lucide-react';
-import {
-  PANEL_BUTTON_STYLES,
-  PANEL_INPUT_STYLES,
-} from '../lib/constants';
-import { extractSDPFromText } from '../lib/url-utils';
+import { ArrowDown, Loader2 } from 'lucide-react';
+import { PANEL_BUTTON_STYLES } from '@/lib/constants';
+import { extractSDPFromText } from '@/lib/url-utils';
+import { useClipboard } from '@/hooks/useClipboard';
+import { cn } from '@/lib/utils';
 
 export const AnswerPanel = ({
-  remoteSDP,
+  isCreatingAnswer,
   handleSetRemoteSDP,
-  onPasteClick,
 }: {
-  remoteSDP: string;
+  isCreatingAnswer: boolean;
   handleSetRemoteSDP: (sdp: string) => void;
-  onPasteClick?: () => void;
 }) => {
-  const handlePaste = async () => {
-    onPasteClick?.(); // Notify parent that paste was user-initiated
+  const { pasteFromClipboard } = useClipboard();
+
+  const handlePaste = useCallback(async () => {
     try {
-      const text = await navigator.clipboard.readText();
+      const text = await pasteFromClipboard();
       const sdp = extractSDPFromText(text);
       handleSetRemoteSDP(sdp);
     } catch (err) {
       console.error('Failed to read clipboard:', err);
     }
-  };
+  }, [pasteFromClipboard, handleSetRemoteSDP]);
 
   return (
-    <div className="flex items-center w-full shrink-0">
-      <Button
-        variant="default"
-        onClick={handlePaste}
-        className={PANEL_BUTTON_STYLES}
-      >
-        <Clipboard className="size-6" />
-        <span className="font-semibold">Paste Remote SDP</span>
-      </Button>
-      <Input
-        value={remoteSDP}
-        onChange={(e) => {
-          const sdp = extractSDPFromText(e.target.value);
-          handleSetRemoteSDP(sdp);
-        }}
-        className={PANEL_INPUT_STYLES}
-        placeholder="Paste remote SDP here..."
-      />
-    </div>
+    <Button
+      variant="default"
+      onClick={handlePaste}
+      disabled={isCreatingAnswer}
+      className={cn(PANEL_BUTTON_STYLES, 'flex flex-1 shrink-0')}
+    >
+      {isCreatingAnswer ? (
+        <Loader2 className="size-6 animate-spin" />
+      ) : (
+        <>
+          <ArrowDown className="size-6" />
+          <span className="font-semibold">Paste Remote SDP</span>
+        </>
+      )}
+    </Button>
   );
 };
