@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 interface UseClipboardCopyReturn {
-  copyToClipboard: (text: string) => void;
+  copyToClipboard: (text: string) => Promise<void>;
   pasteFromClipboard: () => Promise<string>;
   copied: boolean;
 }
@@ -9,16 +9,16 @@ interface UseClipboardCopyReturn {
 export function useClipboard(): UseClipboardCopyReturn {
   const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = useCallback((text: string) => {
+  const copyToClipboard = async (text: string) => {
     if (!text) return;
-    navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, []);
+  };
 
-  const pasteFromClipboard = useCallback(async () => {
+  const pasteFromClipboard = async () => {
     return await navigator.clipboard.readText();
-  }, []);
+  };
 
   return { copyToClipboard, pasteFromClipboard, copied };
 }

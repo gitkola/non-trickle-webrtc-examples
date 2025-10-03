@@ -10,8 +10,8 @@ export const ICE_SERVERS = {
   iceTransportPolicy: 'all' as RTCIceTransportPolicy,
 };
 
-// Connection timeout in milliseconds (30 seconds)
-export const CONNECTION_TIMEOUT_MS = 30000;
+// Connection timeout in milliseconds (600 seconds)
+export const CONNECTION_TIMEOUT_MS = 600000;
 
 // Shared Button Styles
 export const PANEL_BUTTON_STYLES = cn(

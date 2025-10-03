@@ -1,5 +1,5 @@
-import { Button } from './ui/button';
-import { cn } from '../lib/utils';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Minimize, Maximize } from 'lucide-react';
 import { useState } from 'react';
 
@@ -61,7 +61,7 @@ export const VideoComponent = ({
           'justify-center',
           'rounded-none',
           'bg-foreground/50',
-          'hover:foreground/70',
+          'hover:bg-foreground/70',
           'active:bg-foreground/20'
         )}
       >
