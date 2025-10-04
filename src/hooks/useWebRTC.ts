@@ -120,16 +120,28 @@ export function useWebRTC({ localStreamRef }: UseWebRTCProps) {
     try {
       // Try to decompress first, if that fails assume it's uncompressed JSON
       let sdpString = remoteSDP;
+      let decompressionFailed = false;
       try {
         sdpString = await decompressString(remoteSDP);
-      } catch {
+      } catch (err) {
         // If decompression fails, use original string (might be uncompressed JSON)
+        decompressionFailed = true;
       }
       // Parse and validate SDP
-      const parsedSDP = JSON.parse(sdpString);
+      let parsedSDP;
+      try {
+        parsedSDP = JSON.parse(sdpString);
+      } catch (err) {
+        if (decompressionFailed) {
+          handleError('Invalid SDP: Not a valid compressed or JSON format. Please paste the compressed SDP or raw JSON SDP from the other peer.');
+        } else {
+          handleError('Invalid SDP: Failed to parse decompressed data as JSON');
+        }
+        return;
+      }
       const result = SDPSchema.safeParse(parsedSDP);
       if (!result.success) {
-        handleError('Invalid SDP format');
+        handleError('Invalid SDP format: Must contain "type" (offer/answer) and "sdp" fields');
         return;
       }
       const sdp = result.data;
