@@ -1,66 +1,58 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { isMicEnabledAtom, isCameraEnabledAtom } from '@/components/store';
+import { handleError } from '@/lib/handleError';
+import { useAtom } from 'jotai';
 
-/**
- * Custom hook to manage local media streams (camera and microphone)
- */
 export function useMediaStream() {
-  const [isMicEnabled, setIsMicEnabled] = useState(true);
-  const [isCameraEnabled, setIsCameraEnabled] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isMicEnabled, setIsMicEnabled] = useAtom(isMicEnabledAtom);
+  const [isCameraEnabled, setIsCameraEnabled] = useAtom(isCameraEnabledAtom);
+  const [isLocalStreamReady, setIsLocalStreamReady] = useState(false);
   const localStreamRef = useRef<MediaStream | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Start local media stream
-  const startLocalMedia = useCallback(async () => {
+  const startLocalMedia = async () => {
     try {
-      setError(null);
       localStreamRef.current = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       });
-
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = localStreamRef.current;
-      }
+      localVideoRef.current &&
+        (localVideoRef.current.srcObject = localStreamRef.current);
+      setIsLocalStreamReady(true);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to access media devices';
-      setError(errorMessage);
-      console.error('Failed to access media devices:', err);
+      handleError((err as Error)?.message || 'Failed to access media devices');
     }
-  }, []);
+  };
 
-  // Toggle microphone on/off
-  const toggleMic = useCallback(() => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getAudioTracks().forEach((track) => {
-        track.enabled = !track.enabled;
+  const toggleMic = () => {
+    setIsMicEnabled((prev) => {
+      const next = !prev;
+      localStreamRef.current?.getAudioTracks().forEach((track) => {
+        track.enabled = next;
       });
-      setIsMicEnabled((prev) => !prev);
-    }
-  }, []);
+      return next;
+    });
+  };
 
-  // Toggle camera on/off
-  const toggleCamera = useCallback(() => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getVideoTracks().forEach((track) => {
-        track.enabled = !track.enabled;
+  const toggleCamera = () => {
+    setIsCameraEnabled((prev) => {
+      const next = !prev;
+      localStreamRef.current?.getVideoTracks().forEach((track) => {
+        track.enabled = next;
       });
-      setIsCameraEnabled((prev) => !prev);
-    }
-  }, []);
+      return next;
+    });
+  };
 
-  // Cleanup: stop all tracks
-  const cleanup = useCallback(() => {
+  const cleanup = () => {
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
-  }, []);
+  };
 
-  // Initialize media stream on mount
   useEffect(() => {
     startLocalMedia();
     return cleanup;
-  }, [startLocalMedia, cleanup]);
+  }, []);
 
   return {
     localStreamRef,
@@ -69,6 +61,6 @@ export function useMediaStream() {
     isCameraEnabled,
     toggleMic,
     toggleCamera,
-    error,
+    isLocalStreamReady,
   };
 }

@@ -1,30 +1,25 @@
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
-import { ArrowUp, Copy, Check, Loader2 } from 'lucide-react';
+import { ArrowUp, Copy, Check, Loader2, Share } from 'lucide-react';
 import { PANEL_BUTTON_STYLES } from '@/lib/constants';
-import { useClipboard } from '@/hooks/useClipboard';
-import { createSDPUrl } from '@/lib/url-utils';
 
-export const OfferPanel = ({
+export const OfferButton = ({
   localSDP,
-  createOffer,
+  onPress,
   isCreatingOffer,
+  copied,
 }: {
   localSDP: string;
-  createOffer: () => void;
+  onPress: () => void;
   isCreatingOffer: boolean;
+  copied: boolean;
 }) => {
-  const { copyToClipboard, copied } = useClipboard();
-  const handleCopyOffer = async () => {
-    await copyToClipboard(createSDPUrl(localSDP, 'offer'));
-  };
-
   const hasOffer = !!localSDP;
 
   return (
     <Button
       variant="default"
-      onClick={hasOffer ? handleCopyOffer : createOffer}
+      onClick={onPress}
       disabled={isCreatingOffer}
       className={cn(
         PANEL_BUTTON_STYLES,
@@ -45,7 +40,7 @@ export const OfferPanel = ({
               copied ? 'scale-100' : 'scale-0'
             )}
           />
-          <Copy
+          <Share
             className={cn(
               'absolute',
               'size-6',
@@ -59,7 +54,7 @@ export const OfferPanel = ({
         <ArrowUp className="size-6" />
       )}
       <span className="font-semibold">
-        {hasOffer ? 'Copy Offer URL' : 'Create Offer'}
+        {hasOffer ? 'Share Offer URL' : 'Create Offer'}
       </span>
     </Button>
   );

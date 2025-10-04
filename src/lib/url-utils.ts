@@ -8,22 +8,19 @@
 /**
  * Create a shareable URL with SDP in query params
  * @param sdp - Compressed SDP string
- * @param type - 'offer' or 'answer'
+ * @param type - 'offer'
  * @returns Full URL with SDP as query parameter
  */
-export function createSDPUrl(sdp: string, type: 'offer' | 'answer'): string {
+export function createSDPUrl(sdp: string, type: 'offer'): string {
   const url = new URL(window.location.href);
-  // Clear any existing offer/answer params
   url.searchParams.delete('offer');
-  url.searchParams.delete('answer');
-  // Add new param
   url.searchParams.set(type, sdp);
   return url.toString();
 }
 
 /**
- * Parse URL parameters to extract offer or answer
- * @returns Object with offer and/or answer if present in URL
+ * Parse URL parameter to extract offer
+ * @returns Object with offer if present in URL
  */
 export function parseUrlParams(): { offer?: string } {
   const params = new URLSearchParams(window.location.search);
@@ -40,12 +37,10 @@ export function parseUrlParams(): { offer?: string } {
  */
 export function extractSDPFromText(text: string): string {
   const trimmed = text.trim();
-
   // Check if it looks like a URL
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     try {
       const url = new URL(trimmed);
-      // Try to extract offer or answer param
       const offer = url.searchParams.get('offer');
       return offer || trimmed;
     } catch {
