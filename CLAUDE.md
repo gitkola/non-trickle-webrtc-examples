@@ -71,7 +71,7 @@ The project uses a custom build script ([build.ts](build.ts)) that:
   - Prevents connection reset when sender receives answer
 - **STUN server**: Google STUN server for NAT traversal
 - **Connection timeout**: Auto-fails after 30 seconds in "connecting" state
-- **SDP validation**: Zod schema validation before applying remote SDP
+- **SDP validation**: Zod schema validation before applying remote SDP (supports both compressed and raw JSON formats)
 - **Auto-answer**: Automatically generates answer when offer URL is opened
 - **Stream readiness**: Waits for local media before creating peer connection
 - **Proper cleanup**: Closes peer connections when reinitializing or hanging up
@@ -89,9 +89,11 @@ The project uses a custom build script ([build.ts](build.ts)) that:
 ### Error Handling
 
 - React Error Boundary catches component errors
-- Toast notifications replace alert() for better UX
+- Toast notifications replace alert() for better UX ([src/lib/handleError.ts](src/lib/handleError.ts))
 - Connection timeout prevents hanging in "connecting" state
 - SDP validation with Zod before applying
+- Graceful handling of invalid SDP formats (compressed/uncompressed/malformed)
+- Clear error messages distinguish between decompression and parsing failures
 
 ## Key Technologies
 
